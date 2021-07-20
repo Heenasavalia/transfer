@@ -45,7 +45,7 @@ class UserController extends Controller
                     'email' => trim($data['email']),
                     'password' => Hash::make($data['password']),
                     'device_token' => $data['device_token'],
-                    // 'profile_image' => $profile_image,
+                    // 'profile_image' => $profile_image, 
                     //'device_arn' => $device_arn,
                 ]);
                 if ($user) {
