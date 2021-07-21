@@ -18,6 +18,52 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    public function login(Request $request)
+    {
+        $data = $request->all();
+        // dd($data);
+        $response = Helpers::getResponce();
+        try {
+            $validator = Validator::make($request->all(), [
+                'email' => 'required',
+                'password' => 'required|string|min:6',
+            ]);
+            if ($validator->fails()) {
+                $response['message'] = $validator->errors()->first();
+            } else {
+                $user = User::where('email', $request->email)->first();
+                // dd($user);
+                if ($user != null) {
+                    if ($request->has(['email', 'password'])) {
+                        $credentials = $request->only('email', 'password');
+                    } else {
+                        $credentials = $request->only('email', 'password');
+                    }
+                    //$credentials = $request->only('email', 'password');
+                    try {
+                        // attempt to verify the credentials and create a token for the user
+                        if (!$token = JWTAuth::attempt($credentials)) {
+                            $response['message'] = "Invalid Credentials, username and password dismatches. Or username may not registered.";
+                            $response['success'] = -1;
+                        } else {
+                            $response['message'] = "Login SuccessFully";
+                            $response['success'] = 1;
+                            $response['data']['user'] = $user;
+                            $response['data']['token'] = $token;
+                        }
+                    } catch (JWTException $e) { // something went wrong whilst attempting to encode the token
+                        return response()->json(['error' => 'could_not_create_token'], 500);
+                    }
+                } else {
+                    $response['message'] = "Invalid username or password";
+                    $response['success'] = 0;
+                }
+            }
+        } catch (Exception $e) {
+            $response['message'] = $e->getMessage();
+        }
+        return response()->json($response);
+    }
 
     public function register(Request $request)
     {
