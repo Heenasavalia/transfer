@@ -23,3 +23,9 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::post('register', [UserController::class, 'register']);
 Route::post('login', [UserController::class, 'login']);
+
+Route::group(['middleware' => ['jwt.verify']], function() {
+    Route::get('user', [UserController::class, 'getAuthenticatedUser']); // Login User Details
+    Route::post('change-password', [UserController::class, 'ChangePassword']); // User Change PAssword
+});
+

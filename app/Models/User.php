@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Support\Facades\URL;
+use App\Http\Helpers;
 
 class User extends Authenticatable implements JWTSubject
 {
@@ -18,9 +20,20 @@ class User extends Authenticatable implements JWTSubject
      * @var array
      */
     protected $fillable = [
-        'first_name','last_name','email','password','device_arn','device_token','devide_type',
-        'status','created_at','updated_at','profile_image'
+        'first_name', 'last_name', 'email', 'profile_image', 'password', 'device_arn', 'device_token', 'devide_type',
+        'status', 'created_at', 'updated_at', 'profile_image'
     ];
+
+
+    public function getProfileImageAttribute($value)
+    {
+        // dd($value);
+        if($value){
+            return Helpers::manageUploadFileLink('user_profile',$value);
+        }else{
+            return asset('images/default.png');
+        }
+    }
 
     /**
      * The attributes that should be hidden for arrays.
