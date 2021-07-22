@@ -34,7 +34,6 @@ class UserController extends Controller
                 $response['success'] = -1;
                 $response['data'] = null;
             }
-            // dd('in the function',$user);
         } catch (Exception $e) {
             $response['message'] = $e->getMessage();
         }
@@ -43,7 +42,6 @@ class UserController extends Controller
 
     public function ChangePassword(Request $request)
     {
-        // dd('yesh jsdjf');
         $validator = Validator::make($request->all(), [
             'current' => 'required',
             'password' => 'required|min:6',
@@ -57,7 +55,6 @@ class UserController extends Controller
                 $user = JWTAuth::parseToken()->authenticate();
                 $response = Helpers::getResponce();
                 if($request->current == $request->password){
-                    // dd('fhrhsjghdr');
                     $response['message'] = 'Do not use current password as a new password';
                     $response['success'] = 0;
                 }else{
@@ -84,7 +81,6 @@ class UserController extends Controller
     public function login(Request $request)
     {
         $data = $request->all();
-        // dd($data);
         $response = Helpers::getResponce();
         try {
             $validator = Validator::make($request->all(), [
@@ -95,16 +91,13 @@ class UserController extends Controller
                 $response['message'] = $validator->errors()->first();
             } else {
                 $user = User::where('email', $request->email)->first();
-                // dd($user);
                 if ($user != null) {
                     if ($request->has(['email', 'password'])) {
                         $credentials = $request->only('email', 'password');
                     } else {
                         $credentials = $request->only('email', 'password');
                     }
-                    //$credentials = $request->only('email', 'password');
                     try {
-                        // attempt to verify the credentials and create a token for the user
                         if (!$token = JWTAuth::attempt($credentials)) {
                             $response['message'] = "Invalid Credentials, username and password dismatches. Or username may not registered.";
                             $response['success'] = -1;
