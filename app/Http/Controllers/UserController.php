@@ -9,6 +9,7 @@ use Exception;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 
 class UserController extends Controller
@@ -18,6 +19,68 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+
+    public function getAuthenticatedUser()
+    {
+        $response = Helpers::getResponce();
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
+            if ($user) {
+                $response['message'] = "Get User Details";
+                $response['success'] = 1;
+                $response['data'] = $user;
+            } else {
+                $response['message'] = "User not found";
+                $response['success'] = -1;
+                $response['data'] = null;
+            }
+            // dd('in the function',$user);
+        } catch (Exception $e) {
+            $response['message'] = $e->getMessage();
+        }
+        return response()->json($response);
+    }
+
+    public function ChangePassword(Request $request)
+    {
+        // dd('yesh jsdjf');
+        $validator = Validator::make($request->all(), [
+            'current' => 'required',
+            'password' => 'required|min:6',
+            'password_confirmation' => 'required_with:password|same:password|min:6',
+        ]);
+        if ($validator->fails()) {
+            $response['success'] = 0;
+            $response['message'] = $validator->errors()->first();
+        }else{
+            try {
+                $user = JWTAuth::parseToken()->authenticate();
+                $response = Helpers::getResponce();
+                if($request->current == $request->password){
+                    // dd('fhrhsjghdr');
+                    $response['message'] = 'Do not use current password as a new password';
+                    $response['success'] = 0;
+                }else{
+                    if (!Hash::check($request->current, $user->password)) {
+                        $response['message'] = 'Current password does not match!';
+                        $response['success'] = 0;
+                    } 
+                    else {
+                        $user->password = Hash::make($request->password);
+                        $user->save();
+                        $user_profile = User::find($user->id);
+                        $response['message'] = "Update Password Successfully";
+                        $response['success'] = 1;
+                    }
+                }
+            } catch (Exception $e) {
+                $response['message'] = $e->getMessage();
+            }
+        }
+        return response()->json($response);
+    }
+
+
     public function login(Request $request)
     {
         $data = $request->all();
@@ -70,33 +133,38 @@ class UserController extends Controller
         $response = Helpers::getResponce();
         try {
             $data = $request->all();
+            // dd($data);
             $validator = Validator::make($request->all(), [
                 'first_name' => 'required|string',
                 'last_name' => 'required|string',
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:6',
-                'profile_image' => 'max:10000|mimes:jpeg,jpg,png',
+                'password_confirmation' => 'required_with:password|same:password|min:6',
+                'profile_image' => 'mimes:jpeg,jpg,png',
             ]);
-
+            // dd($data['profile_image']);
             if ($validator->fails()) {
                 $response['message'] = $validator->errors()->first();
             } else {
+
                 $profile_image = "default.png";
-                // if (isset($data['profile_image']) && $data['profile_image'] != null) {
-                //     $profile_image = Helpers::upload_image($data['profile_image'], config('constants.profile_image'));
-                // }
+                // dump($profile_image);
+                if (isset($data['profile_image']) && $data['profile_image'] != null) {
+                    // dd($data['profile_image']);
+                    $profile_image = Helpers::upload_image($data['profile_image'], config('constants.user_profile'));
+                }
                 $user = User::create([
                     'first_name' => trim($data['first_name']),
                     'last_name' => trim($data['last_name']),
                     'email' => trim($data['email']),
                     'password' => Hash::make($data['password']),
                     'device_token' => $data['device_token'],
-                    // 'profile_image' => $profile_image, 
+                    'profile_image' => $profile_image,
                     //'device_arn' => $device_arn,
                 ]);
                 if ($user) {
                     $token = JWTAuth::fromUser($user);
-                    $response['message'] = "registration completed successfully";
+                    $response['message'] = "Registration completed successfully";
                     $response['success'] = 1;
                     $response['data']['user'] = $user;
                     $response['data']['token'] = $token;
@@ -106,6 +174,7 @@ class UserController extends Controller
                 }
             }
         } catch (Exception $e) {
+            // dd($e);
             $response['message'] = $e->getMessage();
         }
         return response()->json($response);
