@@ -126,7 +126,6 @@ class UserController extends Controller
         $response = Helpers::getResponce();
         try {
             $data = $request->all();
-            // dd($data);
             $validator = Validator::make($request->all(), [
                 'first_name' => 'required|string',
                 'last_name' => 'required|string',
@@ -135,15 +134,11 @@ class UserController extends Controller
                 'password_confirmation' => 'required_with:password|same:password|min:6',
                 'profile_image' => 'mimes:jpeg,jpg,png',
             ]);
-            // dd($data['profile_image']);
             if ($validator->fails()) {
                 $response['message'] = $validator->errors()->first();
             } else {
-
                 $profile_image = "default.png";
-                // dump($profile_image);
                 if (isset($data['profile_image']) && $data['profile_image'] != null) {
-                    // dd($data['profile_image']);
                     $profile_image = Helpers::upload_image($data['profile_image'], config('constants.user_profile'));
                 }
                 $user = User::create([
@@ -159,7 +154,7 @@ class UserController extends Controller
                     $token = JWTAuth::fromUser($user);
                     $response['message'] = "Registration completed successfully";
                     $response['success'] = 1;
-                    $response['data']['user'] = $user;
+                    $response['data'] = $user;
                     $response['data']['token'] = $token;
                 } else {
                     $response['message'] = "Something went wrong";
@@ -167,7 +162,6 @@ class UserController extends Controller
                 }
             }
         } catch (Exception $e) {
-            // dd($e);
             $response['message'] = $e->getMessage();
         }
         return response()->json($response);
