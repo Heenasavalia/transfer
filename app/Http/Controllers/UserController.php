@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
+use Mail;
+
 
 
 class UserController extends Controller
@@ -19,6 +21,27 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+
+    public function newmail()
+    {
+        // dd('pls, code here');
+        $email = "heenasavaliya2704@gmail.com";
+        $fromEmail = "transferhorizon@gmail.com";
+        $fromName = "New mail trasfer";
+        $message = "<p>Hi" . "\r\n";
+        $message .= "<p>Thank You" . "</p>\r\n";
+
+        // dd($email,$fromEmail,$fromName,$message);
+
+        \Mail::send([], [], function ($mail) use ($email, $fromEmail, $fromName, $message) {
+            $mail->to($email);
+            $mail->from($fromEmail, $fromName)
+                ->subject('new-mail testing')
+                ->setBody($message, 'text/html'); // for HTML rich messages
+        });
+
+        dd("this one is testing purpose");
+    }
 
     public function getAuthenticatedUser()
     {
