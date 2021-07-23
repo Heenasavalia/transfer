@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\FileTransferController;
+
 
 
 /*
@@ -29,5 +31,6 @@ Route::post('login', [UserController::class, 'login']);
 Route::group(['middleware' => ['jwt.verify']], function() {
     Route::get('user', [UserController::class, 'getAuthenticatedUser']); // Login User Details
     Route::post('change-password', [UserController::class, 'ChangePassword']); // User Change PAssword
+    Route::post('forgot-password', [FileTransferController::class, 'forgotPassword']);
 });
 
