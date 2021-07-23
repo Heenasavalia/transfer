@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\FileTransferController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,4 +19,5 @@ Route::get('/', function () {
 });
 
 Route::get('reset-password/{email}/{token}', [FileTransferController::class,'resetPassword']);
+
 Route::post('reset-password-submit',[FileTransferController::class,'resetPasswordSubmit']);

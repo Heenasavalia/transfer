@@ -82,8 +82,8 @@
         <div class="col-md-6 col-sm-4 col-5">
             <div class='set_in_center'>
                 <div class="logoimage">
-                    {{--<img src="http://127.0.0.1:8000/images/Logo.png">--}}
-                    this is logo
+                    <img src="http://3.17.228.42//images/default.png" alt="tranfer-logo" class="tranfer_logo" style="height: 170px;">
+                    <!-- this is logo -->
                 </div>
                 @if($type == 'success')
                 <h1 class='message'><span>Hurray,</span><br> {{$message}}</h1>

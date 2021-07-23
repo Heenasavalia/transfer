@@ -6,6 +6,7 @@ namespace App\Http;
 
 use App\Models\User;
 use Config;
+use Mail;
 
 use JWTAuth;
 
@@ -15,6 +16,7 @@ class Helpers
     public static function sendMail($template_name, $data, $to, $subject) {
         $fromEmail = 'transferhorizon@gmail.com';
         $fromName = 'Transfer Data';
+        // dd($template_name, $data, $to, $subject);
         \Mail::send($template_name, $data, function ($message) use ($fromEmail, $fromName, $subject, $to) {
             $message->from($fromEmail, $fromName);
             $message->to($to);

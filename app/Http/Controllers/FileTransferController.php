@@ -16,13 +16,15 @@ use Illuminate\Support\Str;
 class FileTransferController extends Controller
 {
 
-    public function resetPasswordSubmit(Request $request) {
+    public function resetPasswordSubmit(Request $request)
+    {
         $this->validate($request, [
             'email' => 'required',
             'password' => 'required|min:6',
             'password_confirmation' => 'required|min:6|same:password'
         ]);
         $data = $request->all();
+        // dd($data);
         try {
             $date = \Carbon\Carbon::now();
             $expired_at = \Carbon\Carbon::parse($date->format("Y-m-d H:i:s"));
@@ -34,7 +36,7 @@ class FileTransferController extends Controller
                 }
             }
         } catch (Exception $e) {
-            return view('user.updated_password', ['message' => 'Oops, Something went wrong. Your Sessino has been expired.', 'type' => 'error']);
+            return view('user.updated_password', ['message' => 'Oops, Something went wrong. Your Session has been expired.', 'type' => 'error']);
         }
     }
 
@@ -52,7 +54,7 @@ class FileTransferController extends Controller
             // dd($token);
             $user = User::where('email', $email)->first();
             if ($user != null || $user != "") {
-                dd($user->id);
+                // dd($user->id);
                 $update_user = $user->update([
                     'forgot_token' => $token,
                     'expired_at' => $expired_at
@@ -62,7 +64,9 @@ class FileTransferController extends Controller
                         'name' => $user->first_name . ' ' . $user->last_name,
                         'link' => url('/reset-password/' . $email . '/' . $token)
                     ];
+                    // dump($maildata);
                     $to = [$email => "TRANSFER"];
+                    // dump($to);
                     Helpers::sendMail('reset_password', $maildata, $to, "TRANSFER - Reset Password Link");
                     $response['message'] = "Send Reset Password Link in Your Mail";
                     $response['success'] = 1;
@@ -80,6 +84,7 @@ class FileTransferController extends Controller
 
     public function resetPassword($email, $token)
     {
+        // dd($email, $token);
         try {
             $date = \Carbon\Carbon::now();
             $expired_at = \Carbon\Carbon::parse($date->format("Y-m-d H:i:s"));
