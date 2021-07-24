@@ -127,7 +127,7 @@ class UserController extends Controller
                         } else {
                             $response['message'] = "Login SuccessFully";
                             $response['success'] = 1;
-                            $response['data']['user'] = $user;
+                            $response['data'] = $user;
                             $response['data']['token'] = $token;
                         }
                     } catch (JWTException $e) { // something went wrong whilst attempting to encode the token
@@ -153,8 +153,8 @@ class UserController extends Controller
                 'first_name' => 'required|string',
                 'last_name' => 'required|string',
                 'email' => 'required|string|email|max:255|unique:users',
-                'password' => 'required|string|min:6',
-                'password_confirmation' => 'required_with:password|same:password|min:6',
+                'password' => 'required|string|min:8',
+                // 'password_confirmation' => 'required_with:password|same:password|min:6',
                 'profile_image' => 'mimes:jpeg,jpg,png',
             ]);
             if ($validator->fails()) {
