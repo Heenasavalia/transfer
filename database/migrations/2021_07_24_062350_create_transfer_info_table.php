@@ -15,7 +15,7 @@ class CreateTransferInfoTable extends Migration
     {
         Schema::create('transfer_info', function (Blueprint $table) {
             $table->id();
-            $table->integer('voyage_id');
+            $table->integer('voyage_id')->nullable();
             $table->foreign('voyage_id')->references('id')->on('voyages');
             $table->string('type');
             $table->string('file_name');
