@@ -73,19 +73,18 @@ class UserController extends Controller
         if ($validator->fails()) {
             $response['success'] = 0;
             $response['message'] = $validator->errors()->first();
-        }else{
+        } else {
             try {
                 $user = JWTAuth::parseToken()->authenticate();
                 $response = Helpers::getResponce();
-                if($request->current == $request->password){
+                if ($request->current == $request->password) {
                     $response['message'] = 'Do not use current password as a new password';
                     $response['success'] = 0;
-                }else{
+                } else {
                     if (!Hash::check($request->current, $user->password)) {
                         $response['message'] = 'Current password does not match!';
                         $response['success'] = 0;
-                    } 
-                    else {
+                    } else {
                         $user->password = Hash::make($request->password);
                         $user->save();
                         $user_profile = User::find($user->id);
@@ -115,23 +114,29 @@ class UserController extends Controller
             } else {
                 $user = User::where('email', $request->email)->first();
                 if ($user != null) {
-                    if ($request->has(['email', 'password'])) {
-                        $credentials = $request->only('email', 'password');
-                    } else {
-                        $credentials = $request->only('email', 'password');
-                    }
-                    try {
-                        if (!$token = JWTAuth::attempt($credentials)) {
-                            $response['message'] = "Invalid Credentials, username and password dismatches. Or username may not registered.";
-                            $response['success'] = -1;
+                    if ($user->is_verify == 1) {
+                        if ($request->has(['email', 'password'])) {
+                            $credentials = $request->only('email', 'password');
                         } else {
-                            $response['message'] = "Login SuccessFully";
-                            $response['success'] = 1;
-                            $response['data'] = $user;
-                            $response['data']['token'] = $token;
+                            $credentials = $request->only('email', 'password');
                         }
-                    } catch (JWTException $e) { // something went wrong whilst attempting to encode the token
-                        return response()->json(['error' => 'could_not_create_token'], 500);
+                        try {
+                            if (!$token = JWTAuth::attempt($credentials)) {
+                                $response['message'] = "Invalid Credentials, username and password dismatches. Or username may not registered.";
+                                $response['success'] = -1;
+                            } else {
+                                $u = User::where('email', $request->email)->select('id','first_name','last_name','email','device_token','updated_at','created_at')->first();
+                                $response['message'] = "Login SuccessFully";
+                                $response['success'] = 1;
+                                $response['data'] = $u;
+                                $response['data']['token'] = $token;
+                            }
+                        } catch (JWTException $e) { // something went wrong whilst attempting to encode the token
+                            return response()->json(['error' => 'could_not_create_token'], 500);
+                        }
+                    } else {
+                        $response['message'] = "First to verify your Email and after to login";
+                        $response['success'] = 0;
                     }
                 } else {
                     $response['message'] = "Invalid username or password";
@@ -158,6 +163,7 @@ class UserController extends Controller
                 'profile_image' => 'mimes:jpeg,jpg,png',
             ]);
             if ($validator->fails()) {
+                // dd($validator->fails());
                 $response['message'] = $validator->errors()->first();
             } else {
                 $profile_image = "default.png";
@@ -174,7 +180,22 @@ class UserController extends Controller
                     //'device_arn' => $device_arn,
                 ]);
                 if ($user) {
+
                     $token = JWTAuth::fromUser($user);
+                    $token_mail = str_random(60);
+                    $maildata = [
+                        'name' => $user->first_name . ' ' . $user->last_name,
+                        'link' => url('/mail-verification/' . $user->email . '/' . $token_mail)
+                    ];
+                    $upd = $user->update(['verify_token' => $token_mail]);
+                    // dump($maildata);
+                    $to = [$user->email => "TRANSFER"];
+                    // dump($maildata);
+                    // dd();
+                    Helpers::sendMail('mail_verification', $maildata, $to, "TRANSFER - Verify your Email Address");
+
+                    // dd('stop id here');
+
                     $response['message'] = "Registration completed successfully";
                     $response['success'] = 1;
                     $response['data'] = $user;
@@ -185,9 +206,26 @@ class UserController extends Controller
                 }
             }
         } catch (Exception $e) {
+            dd($e);
             $response['message'] = $e->getMessage();
         }
         return response()->json($response);
+    }
+
+    public function VerifyEmail($email, $token_mail)
+    {
+        // dd($email, $token_mail);
+        try {
+            $check_user = User::where('verify_token', $token_mail)->where('email', $email)->first();
+            if ($check_user != null) {
+                $update_user = $check_user->update(['is_verify' => 1]);
+                return "Successfully verify your email";
+            } else {
+                return  "Oops, Something went wrong";
+            }
+        } catch (Exception $e) {
+            return "Oops, Something went wrong. Your Sessino has been expired";
+        }
     }
 
 
