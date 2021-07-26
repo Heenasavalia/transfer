@@ -5,17 +5,25 @@
 namespace App\Http;
 
 use App\Models\User;
-use Config;
 use Mail;
-
+use Illuminate\Support\Facades\Config;
 use JWTAuth;
 
 class Helpers
 {
+    public static function bytesToHuman($size)
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+        dump($size);
+        $size /= 1024;
+        dd($size);
+        return round($size, 2);
+    }
 
-    public static function sendMail($template_name, $data, $to, $subject) {
-        $fromEmail = 'transferhorizon@gmail.com';
-        $fromName = 'Transfer Data';
+    public static function sendMail($template_name, $data, $to, $subject)
+    {
+        $fromEmail = Config::get('constants.from_email');
+        $fromName = Config::get('constants.from_name');
         // dd($template_name, $data, $to, $subject);
         \Mail::send($template_name, $data, function ($message) use ($fromEmail, $fromName, $subject, $to) {
             $message->from($fromEmail, $fromName);
@@ -33,7 +41,8 @@ class Helpers
         return $response;
     }
 
-    public static function upload_image($image, $path){
+    public static function upload_image($image, $path)
+    {
         // dd($image,$path);
         $fileName = time() . rand(11111, 99999) . '.' . $image->getClientOriginalExtension();
         $p = $image->move($path, $fileName);
@@ -44,16 +53,15 @@ class Helpers
             return "default.png";
         }
     }
-    public static function manageUploadFileLink($path, $value = null){
+    public static function manageUploadFileLink($path, $value = null)
+    {
         // dd($path,$value);
         // dd($value);
-        if($value != null){
-            $link = "http://127.0.0.1:8000/". $path . "/" . $value;
-        }else{
+        if ($value != null) {
+            $link = "http://127.0.0.1:8000/" . $path . "/" . $value;
+        } else {
             $link = "http://127.0.0.1:8000/" . $path . "/";
         }
         return $link;
     }
-
-    
 }
