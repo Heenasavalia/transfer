@@ -3,7 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Voyage;
+use Exception;
 use Illuminate\Http\Request;
+use App\Http\Helpers;
+use App\Models\User;
+use App\Models\TransferInfo;
+use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class VoyageController extends Controller
 {
@@ -12,6 +18,36 @@ class VoyageController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+
+    public function CreateTransferData(Request $request){
+        dump('wel-come to fun');
+        $response = Helpers::getResponce();
+        try{
+            $validator = Validator::make($request->all(), [
+            //    'emails' => 'required',
+                
+            ]);
+            if ($validator->fails()) {
+                // dd($validator->fails());
+                $response['message'] = $validator->errors()->first();
+            } else {
+                $emails = [];
+                $me = JWTAuth::parseToken()->authenticate();
+                
+                if($me != null){
+                    dd($me->id);
+                }else{
+                    $response['message'] = "User Not Found";
+                    $response['success'] = 0;
+                }
+            }
+        }catch(Exception $e){
+            $response['message'] = $e->getMessage();
+        }
+        return response()->json($response);
+    }
+
+
     public function index()
     {
         //
