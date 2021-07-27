@@ -19,27 +19,27 @@ class VoyageController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function displayTransferData(Request $request){
+    public function displayTransferData(Request $request)
+    {
         $response = Helpers::getResponce();
-        try{
+        try {
             $data = $request->all();
-            $validator = Validator::make($data,[
+            $validator = Validator::make($data, [
                 'type' => 'required|in:send,recevied'
             ]);
-            if($validator->fails()){
+            if ($validator->fails()) {
                 $response['message'] = $validator->errors()->first();
-            }else{
+            } else {
                 $me = JWTAuth::parseToken()->authenticate();
                 dump($me->id);
-                if($data['type'] == 'send'){
-                    $send_data = Voyage::where('user_id',$me->id)->where('is_delete',0)->get();
+                if ($data['type'] == 'send') {
+                    $send_data = Voyage::where('user_id', $me->id)->where('is_delete', 0)->get();
                     dump($send_data);
-                }else{
-                    
+                } else {
                 }
             }
             dd("stop here");
-        }catch(Exception $e){
+        } catch (Exception $e) {
             $response['message'] = $e->getMessage();
         }
         return response()->json($response);
@@ -66,61 +66,79 @@ class VoyageController extends Controller
             } else {
 
                 $emails = [];
+                $link_data = [];
                 $me = JWTAuth::parseToken()->authenticate();
+                // dd($me->id);
 
                 if ($me != null) {
                     $receiver_ids = (isset($data['receiver_id']) && $data['receiver_id'] != null) ? $data['receiver_id'] : null;
                     $ids = ($receiver_ids != null) ? explode(",", $receiver_ids) : [];
                     $contents = (isset($data['contents']) && $data['contents'] != null) ? $data['contents'] : null;
                     // dump($contents);
+                    if (count($ids) > 5) {
+                        $response['message'] = "You can only share to 5 Member";
+                        $response['success'] = 0;
+                        $response['data'] = null;
+                    } else {
+                        //dd("yes come come");
+                        if ($contents != null) {
 
-                    if ($contents != null) {
-                        // foreach ($contents as $c) {
+                            foreach ($contents as $c) {
 
-                        //     $extension = $c['file']->getClientOriginalExtension();
-                        //     $img = Helpers::upload_image($c['file'], config('constants.file_data'));
-                        //     $create_file = TransferInfo::create([
-                        //         'type' => $extension,
-                        //         'file_name' => $img
-                        //     ]);
+                                $extension = $c['file']->getClientOriginalExtension();
+                                $img = Helpers::upload_image($c['file'], config('constants.file_data'));
+                                $create_file = TransferInfo::create([
+                                    'type' => $extension,
+                                    'file_name' => $img
+                                ]);
+                                $link_data[] = $create_file->file_name;
 
-                        //     if ($create_file != null) {
-                        //         foreach ($ids as $id) {
-                        //             $c = Voyage::create([
-                        //                 'user_id' => $me->id,
-                        //                 'receiver_id' => $id,
-                        //                 'type' => $extension,
-                        //                 'image_ids' => $create_file->id
-                        //             ]);
-                        //         }
-                        //     } else {
-                        //         $response['message'] = "Something went wrong";
-                        //         $response['success'] = 0;
-                        //     }
-                        // }
-                        $users_email = User::whereIn('id', $ids)->pluck('email')->toArray();
-                        $emails = implode(",", $users_email);
-                        $fromEmail = Config::get('constants.from_email');
-                        $fromName = Config::get('constants.from_name');
-                        // dump($fromEmail);
-                        // dd($fromName);
-                        $message = "<p>Hi" . "\r\n";
-                        
-                        
-                        $message .= "<p>Thank You" . "</p>\r\n";
-                        $message .= "<p>We hope to see you again soon!" . "</p>\r\n";
-                        $message .= "<pre>-- " . "\r\n";
-                        
-                 
-                        \Mail::send([], [], function ($mail) use ($emails, $fromEmail, $fromName, $message) {
-                            $mail->to($emails);
-                            $mail->from($fromEmail, $fromName)
-                                ->subject('Transfer - New file recevied From your Friend')
-                                ->setBody($message, 'text/html'); // for HTML rich messages
-                        });
+                                dump($link_data);
 
-                        $response['message'] = "Create all done";
-                        $response['success'] = 1;
+                                if ($create_file != null) {
+                                    foreach ($ids as $id) {
+                                        $c = Voyage::create([
+                                            'user_id' => $me->id,
+                                            'receiver_id' => $id,
+                                            'type' => $extension,
+                                            'image_ids' => $create_file->id
+                                        ]);
+                                        $email = User::where('id', $id)->first()->email;
+                                        $emails[] = $email;
+                                        // dump($emails);
+                                    }
+                                } else {
+                                    $response['message'] = "Something went wrong";
+                                    $response['success'] = 0;
+                                }
+                            }
+
+                            dump('stop here');
+                            // $fromEmail = Config::get('constants.from_email');
+                            // $fromName = Config::get('constants.from_name');
+                            // $message = "<p>Hi" . "\r\n";
+                            // $message .= "<p>Thank You" . "</p>\r\n";
+                            // $message .= "<p>We hope to see you again soon!" . "</p>\r\n";
+                            // $message .= "<pre>-- " . "\r\n";
+
+                            // \Mail::send('send_transferlink', function ($mail) use ($emails, $fromEmail, $fromName, $message) {
+                            //     $mail->to($emails);
+                            //     $mail->from($fromEmail, $fromName)
+                            //         ->subject('Transfer - New file recevied From your Friend')
+                            //         ->setBody($message, 'text/html'); // for HTML rich messages
+                            // });
+                            // dd("dhfhg");
+                            $maildata = [
+                                // 'name' => $user->first_name . ' ' . $user->last_name,
+                                'link' => "http://3.17.228.42/file_data/" . $link_data
+                            ];
+
+                            // dd($maildata);
+                            Helpers::sendMail('send_transferlink', $maildata, $emails, "TRANSFER - New file recevied From your Friend");
+
+                            $response['message'] = "Create all done";
+                            $response['success'] = 1;
+                        }
                     }
                 } else {
                     $response['message'] = "User Not Found";
@@ -129,6 +147,7 @@ class VoyageController extends Controller
                 // dd('stop here');
             }
         } catch (Exception $e) {
+            dd($e);
             $response['message'] = $e->getMessage();
         }
         return response()->json($response);
