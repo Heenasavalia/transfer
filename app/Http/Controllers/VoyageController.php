@@ -19,6 +19,34 @@ class VoyageController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    public function displayTransferData(Request $request){
+        $response = Helpers::getResponce();
+        try{
+            $data = $request->all();
+            $validator = Validator::make($data,[
+                'type' => 'required|in:send,recevied'
+            ]);
+            if($validator->fails()){
+                $response['message'] = $validator->errors()->first();
+            }else{
+                $me = JWTAuth::parseToken()->authenticate();
+                dump($me->id);
+                if($data['type'] == 'send'){
+                    $send_data = Voyage::where('user_id',$me->id)->where('is_delete',0)->get();
+                    dump($send_data);
+                }else{
+                    
+                }
+            }
+            dd("stop here");
+        }catch(Exception $e){
+            $response['message'] = $e->getMessage();
+        }
+        return response()->json($response);
+    }
+
+
+
 
     public function CreateTransferData(Request $request)
     {

@@ -35,5 +35,6 @@ Route::group(['middleware' => ['jwt.verify']], function() {
     Route::post('forgot-password', [FileTransferController::class, 'forgotPassword']);
 
     Route::post('create-transfer', [VoyageController::class, 'CreateTransferData']);
+    Route::post('display-transfer',[VoyageController::class, 'displayTransferData']);
 });
 
