@@ -8,9 +8,46 @@ use App\Models\User;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Helpers;
+use Exception;
+use App\Models\Dummy;
 
 class ApiController extends Controller
 {
+
+    public function Image_upload(Request $request){
+
+        $validator = Validator::make($request->all(), [
+            'image' => 'required',
+        ]);
+        if ($validator->fails()) {
+            $response['success'] = 0;
+            $response['message'] = $validator->errors()->first();
+        } else {
+            try {
+                $profile_image = "default.png";
+                if (isset($data['image']) && $data['image'] != null) {
+                    $profile_image = Helpers::upload_image($data['image'], config('constants.dummy_image'));
+                }
+                $create = Dummy::create([
+                    'image' => $profile_image,
+                ]);
+                if ($create) {
+                    $response['message'] = "Success";
+                    $response['success'] = 1;
+                    $response['data'] = $create;
+                }else{
+                    $response['message'] = "Something went wrong";
+                    $response['success'] = 0;
+                }
+            } catch (Exception $e) {
+                $response['message'] = $e->getMessage();
+            }
+        }
+        return response()->json($response);
+        
+    }
+
     
     public function register(Request $request)
     {

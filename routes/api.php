@@ -38,3 +38,4 @@ Route::group(['middleware' => ['jwt.verify']], function() {
     Route::post('display-transfer',[VoyageController::class, 'displayTransferData']);
 });
 
+Route::post('image', [ApiController::class, 'Image_upload']);

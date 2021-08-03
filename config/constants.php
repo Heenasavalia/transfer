@@ -8,6 +8,8 @@ return [
    
     'default_profile' => 'images',
     'file_data' => 'file_data',
+
+    'dummy_image' => 'dummy_image',
   
 ];
 
